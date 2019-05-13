@@ -1,28 +1,43 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-app id="main" class="grey lighten-5">
+    <toolbar/>
+    <v-content>
+      <transition name="bounce">
+      <router-view></router-view>
+      </transition>
+    </v-content>
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Toolbar from './components/Toolbar'
 
 export default {
-  name: 'app',
   components: {
-    HelloWorld
+    Toolbar
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+html {
+  overflow: auto;
+}
+</style>
+
+<style scoped>
+.bounce-enter-active {
+  animation: bounce-in .3s;
+}
+.bounce-leave-active {
+  animation: bounce-in .3s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 </style>
