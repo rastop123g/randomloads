@@ -52,6 +52,7 @@
                   <td class="text-xs-center">{{ props.item.name }}</td>
                   <td class="text-xs-center">{{ props.item.sumPd }}</td>
                   <td class="text-xs-center">{{ props.item.sumPv }}</td>
+                  <td class="text-xs-center">{{ props.item.k_o }}</td>
                   <td class="text-xs-center">{{ props.item.cosd }}</td>
                   <td class="text-xs-center">{{ props.item.cosv }}</td>
                   <td class="text-xs-center">{{ props.item.sumSd }}</td>
@@ -82,6 +83,7 @@ export default {
                 {text: 'Участок', value: 'name'},
                 {text: 'Psum д', value: 'sumPd'},
                 {text: 'Psum в', value: 'sumPv'},
+                {text: 'Ko', value: 'k_o'},
                 {text: 'cos д', value: 'cosd'},
                 {text: 'cos в', value: 'cosv'},
                 {text: 'S д', value: 'sumSd'},
@@ -162,6 +164,7 @@ export default {
                                 name: `${maxpoint}.${j + 1} - ${maxpoint}.${j}`,
                                 sumPd: Math.round(sumPd*100) / 100,
                                 sumPv: Math.round(sumPv*100) / 100,
+                                k_o: this.k_o(current - j),
                                 cosd: Math.round(cosd*100) / 100,
                                 cosv: Math.round(cosv*100) / 100,
                                 sumSd: Math.round(sumSd*100) / 100,
@@ -177,6 +180,7 @@ export default {
                         name: `${maxpoint} - ${maxpoint - 1}`,
                         sumPd: Math.round(sumPd*100) / 100,
                         sumPv: Math.round(sumPv*100) / 100,
+                        k_o: this.k_o(count),
                         cosd: Math.round(cosd*100) / 100,
                         cosv: Math.round(cosv*100) / 100,
                         sumSd: Math.round(sumSd*100) / 100,
@@ -210,21 +214,24 @@ export default {
             let k = [[1, 1], [2, 0.9], [3, 0.85], [5, 0.8], [10, 0.75], [20, 0.7], [25, 0.65]]
             let buffer_min = [1, 1]
             let buffer_max = [25, 0.65]
+            let xint, yint, percent, result;
+            if(num >= 25) 
+                return 0.65
             k.some(item => {
-                if(num >= 25)
-                    return 0.65
                 if(num > item[0]) {
                     buffer_min = [item[0], item[1]]
                 } else if(num == item[0]) {
-                    return item[1]
+                    result = item[1]
+                    return true
                 } else {
                     buffer_max = [item[0], item[1]]
+                    xint = buffer_max[0] - buffer_min[0]
+                    yint = buffer_max[1] - buffer_min[1]
+                    percent = (num - buffer_min[0]) / xint
+                    result = buffer_min[1] + yint * percent
+                    return true
                 }
             })
-            let xint = buffer_max[0] - buffer_min[0]
-            let yint = buffer_max[1] - buffer_min[1]
-            let percent = (num - buffer_min[0]) / xint
-            let result = buffer_min[1] + yint * percent
             return result
         }
     }
