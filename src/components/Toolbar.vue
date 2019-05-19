@@ -35,7 +35,8 @@ export default {
             showlogo: false,
             drawer: false,
             menuItems: [
-                {name: '0.4 кВ', path: '/load04'}
+                {name: '0.4 кВ', path: '/load04'},
+                {name: '10 кВ', path: '/load10'}
             ]
         }
     },
@@ -46,7 +47,7 @@ export default {
     },
     mounted () {
         this.showlogo = (this.$router.currentRoute.fullPath == '/') ? false : true;
-        this.$router.afterEach((to, from) => {
+        this.$router.afterEach((to) => {
             if(to.path == '/')
             this.showlogo = false
             else
