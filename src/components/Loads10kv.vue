@@ -1,7 +1,7 @@
 <template>
     <div class="load10">
         <div></div>
-        <div>
+        <div style="overflow: auto">
             <h1 class=".font-weight-medium text-xs-center">Расчет нагрузок 10кВ</h1>
             <div class="line" v-for="(line, index) in lineload" :key="`line${index}`">
             <div class="inpcontainer">
@@ -38,15 +38,19 @@
             </div>
             <v-btn @click="addline" block color="indigo" dark>Добавить линию</v-btn>
             <v-btn block color="green accent-4" dark @click="createSchemes">Расчитать</v-btn>
+            <p class="font-italic">*Нажимайте повторно для перегенерации схем</p>
             <div class="scroll" v-for="(line, i) in result" :key="`table${i}`">
                 <h3>Линия {{i + 1}}</h3>
+                <schema height="300" width="700" :numline="i" :schema="schemes[i]"></schema>
                   <v-data-table
+                  :id="`line${i + 1}`"
                   v-if="ready_table"
                   disable-initial-sort
                   :headers="headers"
                   :items="line"
                   class="elevation-1"
                   hide-actions
+                  :sort-icon="''"
                 >
                 <template v-slot:items="props">
                   <td class="text-xs-center">{{ props.item.name }}</td>
@@ -57,15 +61,23 @@
                   <td class="text-xs-center">{{ props.item.cosv }}</td>
                   <td class="text-xs-center">{{ props.item.sumSd }}</td>
                   <td class="text-xs-center">{{ props.item.sumSv }}</td>
+                  <td class="text-xs-center">{{ props.item.Id }}</td>
+                  <td class="text-xs-center">{{ props.item.Iv }}</td>
                 </template>
                 </v-data-table>
               </div>
+              <v-btn v-if="ready_table" block color="green accent-4" dark @click="savetable">Сохранить в Excel</v-btn>
+              <p v-if="ready_table" class="font-italic">*Каждая линия будет сохранена в отдельной вкладке снизу.</p>
         </div>
         <div></div>
     </div>
 </template>
 
 <script>
+import Schema from './Schema'
+import { saveAs } from 'file-saver';
+import xlsx from 'xlsx'
+
 export default {
     data() {
         return {
@@ -87,7 +99,9 @@ export default {
                 {text: 'cos д', value: 'cosd'},
                 {text: 'cos в', value: 'cosv'},
                 {text: 'S д', value: 'sumSd'},
-                {text: 'S в', value: 'sumSv'}
+                {text: 'S в', value: 'sumSv'},
+                {text: 'I д', value: 'Id'},
+                {text: 'I в', value: 'Iv'}
             ],
             ready_table: false
         }
@@ -160,15 +174,19 @@ export default {
                             let sumPv = this.summ_P(this.lineload[iline].slice(lineln - count, lineln - count + (current - j)), 'Pv') * k_r * this.k_o(current - j)
                             let sumSd = sumPd / cosd
                             let sumSv = sumPv / cosv
+                            let Id = sumSd / (Math.sqrt(3) * 10)
+                            let Iv = sumSv / (Math.sqrt(3) * 10)
                             this.result[this.result.length - 1].push({
-                                name: `${maxpoint}.${j + 1} - ${maxpoint}.${j}`,
+                                name: String(maxpoint).concat('.', String(j + 1), ' - ', String(maxpoint), (j == 0) ? '' : '.'.concat(String(j))), // Например 3.2 - 3.1
                                 sumPd: Math.round(sumPd*100) / 100,
                                 sumPv: Math.round(sumPv*100) / 100,
                                 k_o: this.k_o(current - j),
                                 cosd: Math.round(cosd*100) / 100,
                                 cosv: Math.round(cosv*100) / 100,
                                 sumSd: Math.round(sumSd*100) / 100,
-                                sumSv: Math.round(sumSv*100) / 100
+                                sumSv: Math.round(sumSv*100) / 100,
+                                Id: Math.round(Id*100) / 100,
+                                Iv: Math.round(Iv*100) / 100
                             })
                         }
                     }
@@ -176,6 +194,8 @@ export default {
                     let sumPv = this.summ_P(this.lineload[iline].slice(lineln - count), 'Pv') * k_r * this.k_o(count)
                     let sumSd = sumPd / cosd
                     let sumSv = sumPv / cosv
+                    let Id = sumSd / (Math.sqrt(3) * 10)
+                    let Iv = sumSv / (Math.sqrt(3) * 10)
                     this.result[this.result.length - 1].push({
                         name: `${maxpoint} - ${maxpoint - 1}`,
                         sumPd: Math.round(sumPd*100) / 100,
@@ -184,7 +204,9 @@ export default {
                         cosd: Math.round(cosd*100) / 100,
                         cosv: Math.round(cosv*100) / 100,
                         sumSd: Math.round(sumSd*100) / 100,
-                        sumSv: Math.round(sumSv*100) / 100
+                        sumSv: Math.round(sumSv*100) / 100,
+                        Id: Math.round(Id*100) / 100,
+                        Iv: Math.round(Iv*100) / 100
                     })
                     if(i == 0) {
                         break;
@@ -233,7 +255,18 @@ export default {
                 }
             })
             return result
+        },
+        savetable() {
+            var wb = xlsx.utils.book_new();
+            for(let i = 0; i < this.result.length; i++) {
+                wb.SheetNames.push(`line${i + 1}`);
+                wb.Sheets[`line${i + 1}`] = xlsx.utils.table_to_sheet(document.querySelector(`#line${i + 1} div table`))
+            }
+            xlsx.writeFile(wb, '10kV.xlsx')
         }
+    },
+    components: {
+        Schema
     }
 }
 </script>
@@ -246,7 +279,6 @@ export default {
     justify-content: center;
     grid-template-columns: 2fr 4fr 2fr;
 }
-
 .inpcontainer {
     margin-top:5px;
     display: grid;
